@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약하기 - 육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 브레드크럼 */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #2e7d32;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        /* 상단 섹션 (캘린더 + 일정표) */
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* 캘린더 섹션 */
+        .calendar-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        .calendar-header h3 {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .calendar-nav button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .calendar-nav button:hover {
+            background-color: #f5f5f5;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0;
+        }
+
+        .calendar-grid > div {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .calendar-grid .header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: default;
+        }
+
+        .calendar-grid .sunday {
+            color: #e74c3c;
+        }
+
+        .calendar-grid .saturday {
+            color: #3498db;
+        }
+
+        .calendar-grid .other-month {
+            color: #ccc;
+        }
+
+        .calendar-grid .selected {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .calendar-grid div:hover:not(.header):not(.other-month) {
+            background-color: #e8f5e9;
+        }
+
+        .calendar-grid .selected:hover {
+            background-color: #1b5e20;
+        }
+
+        /* 일정표 섹션 */
+        .schedule-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .schedule-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        .schedule-header h3 {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 0.8rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .schedule-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .schedule-table .time-cell {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .unavailable {
+            color: #999;
+            background-color: #f5f5f5;
+        }
+
+        /* 예약 폼 섹션 */
+        .reservation-form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        .form-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .selected-date {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+
+        .selected-date strong {
+            color: #2e7d32;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* 라디오 버튼 그룹 */
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-item:hover {
+            border-color: #2e7d32;
+            background-color: #f5f5f5;
+        }
+
+        .radio-item input[type="radio"] {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .radio-item input[type="radio"]:checked + label {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .radio-item:has(input:checked) {
+            border-color: #2e7d32;
+            background-color: #e8f5e9;
+        }
+
+        /* 입력 필드 */
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        /* 제출 버튼 */
+        .submit-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #1b5e20;
+        }
+
+        .submit-button:active {
+            transform: translateY(1px);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 1.2rem;
+            }
+
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 0 1rem 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .radio-group {
+                flex-direction: column;
+            }
+
+            .radio-item {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+
+            .calendar-grid > div {
+                font-size: 0.85rem;
+            }
+
+            .schedule-table {
+                font-size: 0.85rem;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">육사</div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="reservation.html">예약하기</a></li>
+            <li><a href="check.html">예약조회</a></li>
+            <li><a href="login.html">관리자</a></li>
+        </ul>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 브레드크럼 -->
+    <div class="breadcrumb">
+        <a href="index.html">홈</a> &gt; 예약
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-container">
+        <!-- 상단 섹션 -->
+        <div class="top-section">
+            <!-- 캘린더 -->
+            <section class="calendar-section">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" id="prevMonth">◀</button>
+                    <h3 id="currentMonth">2024.01</h3>
+                    <button class="calendar-nav-btn" id="nextMonth">▶</button>
+                </div>
+                <div class="calendar-grid" id="calendar">
+                    <!-- 요일 헤더 -->
+                    <div class="header sunday">일</div>
+                    <div class="header">월</div>
+                    <div class="header">화</div>
+                    <div class="header">수</div>
+                    <div class="header">목</div>
+                    <div class="header">금</div>
+                    <div class="header saturday">토</div>
+                    <!-- 날짜는 JavaScript로 생성 -->
+                </div>
+            </section>
+
+            <!-- 선택 날짜 일정표 -->
+            <section class="schedule-section">
+                <div class="schedule-header">
+                    <h3 id="selectedDateDisplay">2024.01.01 교육일정</h3>
+                </div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>시간대/교육구분</th>
+                            <th>기능</th>
+                            <th>도로기초</th>
+                            <th>도봉</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleTableBody">
+                        <tr>
+                            <td class="time-cell">08시</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                        </tr>
+                        <tr>
+                            <td class="time-cell">10시</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                        </tr>
+                        <tr>
+                            <td class="time-cell">13시</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                            <td>0/4</td>
+                        </tr>
+                        <tr>
+                            <td class="time-cell">15시</td>
+                            <td class="unavailable">미개설</td>
+                            <td class="unavailable">미개설</td>
+                            <td class="unavailable">미개설</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- 예약 폼 -->
+        <section class="reservation-form-section">
+            <div class="form-header">
+                <h2>예약 정보 입력</h2>
+            </div>
+
+            <div class="selected-date">
+                <strong>선택한 날짜:</strong> <span id="selectedDateForm">날짜를 선택해주세요</span>
+            </div>
+
+            <form id="reservationForm">
+                <!-- 시간대 선택 -->
+                <div class="form-group">
+                    <label>시간대 *</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="time08" name="time" value="08시" required>
+                            <label for="time08">08시</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="time10" name="time" value="10시">
+                            <label for="time10">10시</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="time13" name="time" value="13시">
+                            <label for="time13">13시</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="time15" name="time" value="15시">
+                            <label for="time15">15시</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 교육구분 선택 -->
+                <div class="form-group">
+                    <label>교육구분 *</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="courseBasic" name="courseType" value="기능" required>
+                            <label for="courseBasic">기능</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="courseRoad" name="courseType" value="도로기초">
+                            <label for="courseRoad">도로기초</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="courseDobong" name="courseType" value="도봉">
+                            <label for="courseDobong">도봉</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 개인정보 입력 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">이름 *</label>
+                        <input type="text" id="name" name="name" class="form-control" required placeholder="이름을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label for="grade">학년 *</label>
+                        <select id="grade" name="grade" class="form-control" required>
+                            <option value="">학년 선택</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="unit">중대 *</label>
+                        <select id="unit" name="unit" class="form-control" required>
+                            <option value="">중대 선택</option>
+                            <option value="1">1중대</option>
+                            <option value="2">2중대</option>
+                            <option value="3">3중대</option>
+                            <option value="4">4중대</option>
+                            <option value="5">5중대</option>
+                            <option value="6">6중대</option>
+                            <option value="7">7중대</option>
+                            <option value="8">8중대</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">전화번호 *</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" required 
+                               placeholder="010-0000-0000" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}">
+                    </div>
+                </div>
+
+                <!-- 비고 -->
+                <div class="form-group">
+                    <label for="note">비고</label>
+                    <textarea id="note" name="note" class="form-control" 
+                              placeholder="추가 요청사항이 있으면 입력하세요 (선택사항)"></textarea>
+                </div>
+
+                <!-- 제출 버튼 -->
+                <button type="submit" class="submit-button">예약하기</button>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        // 메뉴 토글 기능
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 캘린더 기능 (임시)
+        let currentDate = new Date();
+        let selectedDate = null;
+
+        function generateCalendar(year, month) {
+            const calendar = document.getElementById('calendar');
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const prevLastDate = new Date(year, month, 0).getDate();
+            
+            // 기존 날짜 제거 (헤더 7개는 유지)
+            while (calendar.children.length > 7) {
+                calendar.removeChild(calendar.lastChild);
+            }
+            
+            // 이전 달 날짜
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'other-month';
+                day.textContent = prevLastDate - i;
+                calendar.appendChild(day);
+            }
+            
+            // 현재 달 날짜
+            for (let date = 1; date <= lastDate; date++) {
+                const day = document.createElement('div');
+                const dayOfWeek = new Date(year, month, date).getDay();
+                
+                if (dayOfWeek === 0) day.className = 'sunday';
+                if (dayOfWeek === 6) day.className = 'saturday';
+                
+                day.textContent = date;
+                day.addEventListener('click', () => selectDate(year, month, date));
+                calendar.appendChild(day);
+            }
+            
+            // 다음 달 날짜
+            const totalCells = calendar.children.length - 7;
+            const remainingCells = 35 - totalCells;
+            for (let date = 1; date <= remainingCells; date++) {
+                const day = document.createElement('div');
+                day.className = 'other-month';
+                day.textContent = date;
+                calendar.appendChild(day);
+            }
+            
+            // 월 표시 업데이트
+            document.getElementById('currentMonth').textContent = 
+                `${year}.${String(month + 1).padStart(2, '0')}`;
+        }
+
+        function selectDate(year, month, date) {
+            // 이전 선택 제거
+            document.querySelectorAll('.calendar-grid > div').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 새 선택 추가
+            const days = document.querySelectorAll('.calendar-grid > div:not(.header):not(.other-month)');
+            days[date - 1].classList.add('selected');
+            
+            // 선택 날짜 업데이트
+            selectedDate = new Date(year, month, date);
+            const dateString = `${year}.${String(month + 1).padStart(2, '0')}.${String(date).padStart(2, '0')}`;
+            document.getElementById('selectedDateDisplay').textContent = `${dateString} 교육일정`;
+            document.getElementById('selectedDateForm').textContent = dateString;
+        }
+
+        // 이전/다음 월 버튼
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
+
+        // 초기 캘린더 생성
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        // 폼 제출 처리 (임시)
+        document.getElementById('reservationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('예약 기능은 Firebase 연동 후 작동합니다.');
+        });
+    </script>
+</body>
+</html>
