@@ -557,7 +557,7 @@
                 
                 if (isAdmin) {
                     // 관리자인 경우 admin.html로 이동
-                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    sessionStorage.setItem('adminLoggedIn', 'false');
                     window.location.href = 'admin.html';
                 } else {
                     // 관리자가 아닌 경우 로그아웃하고 에러 표시
