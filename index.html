@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 메인 컨텐츠 */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .info-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .info-section h2 {
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .info-text {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .contact-info {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #eee;
+        }
+
+        .contact-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        /* 교육일정 테이블 섹션 */
+        .schedule-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .schedule-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        .schedule-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .schedule-header .date {
+            color: #666;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 테이블 스타일 */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .schedule-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .schedule-table td {
+            background-color: white;
+            font-size: 1.1rem;
+        }
+
+        .schedule-table .time-cell {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .unavailable {
+            color: #999;
+            background-color: #f5f5f5;
+        }
+
+        /* 빠른 메뉴 버튼 */
+        .quick-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .quick-button {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .quick-button:hover {
+            background-color: #1b5e20;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 1.2rem;
+            }
+
+            .main-container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+
+            .info-section,
+            .schedule-section {
+                padding: 1.5rem;
+            }
+
+            .schedule-table {
+                font-size: 0.9rem;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 0.7rem;
+            }
+
+            .quick-menu {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+
+            .schedule-table {
+                font-size: 0.85rem;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">육사</div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="reservation.html">예약하기</a></li>
+            <li><a href="check.html">예약조회</a></li>
+            <li><a href="login.html">관리자</a></li>
+        </ul>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-container">
+        <!-- 안내 섹션 -->
+        <section class="info-section">
+            <h2>📢 공지사항</h2>
+            <div class="info-text">
+                육군사관학교 운전교육 예약시스템입니다.<br><br>
+                교육은 기능교육, 도로기초교육, 도봉(도로주행)교육 세 가지이고<br>
+                교육 가능한 시간대는 08시, 10시, 13시, 15시 입니다.<br><br>
+                교육 일정 조회했을 때 "교육 미개설입니다." 라고 뜬 경우에는<br>
+                교육이 아직 개설되지 않았거나, 교관님께서 개인적인 사유로 막아놓았을 때 표시됩니다.
+            </div>
+            
+            <div class="contact-info">
+                <h3>궁금한 사항이 있다면</h3>
+                <p>02-2197-5862 (군 내선) / 010-8834-0157 (교관님 휴대폰) 으로 연락주십시오.</p>
+            </div>
+        </section>
+
+        <!-- 빠른 메뉴 -->
+        <section class="quick-menu">
+            <a href="reservation.html" class="quick-button">예약하기</a>
+            <a href="check.html" class="quick-button">예약조회</a>
+        </section>
+
+        <!-- 교육일정 테이블 -->
+        <section class="schedule-section">
+            <div class="schedule-header">
+                <h2>교육일정</h2>
+                <div class="date" id="currentDate">오늘의 교육일정</div>
+            </div>
+            
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>시간대/교육구분</th>
+                        <th>기능</th>
+                        <th>도로기초</th>
+                        <th>도봉</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-cell">08시</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">10시</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">13시</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                        <td>0/4</td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">15시</td>
+                        <td class="unavailable">미개설</td>
+                        <td class="unavailable">미개설</td>
+                        <td class="unavailable">미개설</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Firebase SDK 및 JavaScript -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgZxM9bFkVzzLHTvDTY7HsoMVTDfQ-wIY",
+            authDomain: "kma-driving-education-booking.firebaseapp.com",
+            projectId: "kma-driving-education-booking",
+            storageBucket: "kma-driving-education-booking.firebasestorage.app",
+            messagingSenderId: "741013364677",
+            appId: "1:741013364677:web:22f620279dc8e72fcbb5ac"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // DOM 요소 가져오기
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+
+        // 메뉴 열기 함수
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        // 메뉴 닫기 함수
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // 이벤트 리스너 등록
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 네비게이션 링크 클릭시 메뉴 닫기
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                closeMenu();
+            });
+        });
+
+        // 현재 날짜 표시 함수
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateCurrentDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `오늘 (${year}.${month}.${day})의 교육일정`;
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Firebase에서 오늘 날짜의 교육 일정 가져오기
+        async function loadTodaySchedule() {
+            const today = formatDate(new Date());
+            
+            try {
+                // availableDates 컬렉션에서 오늘 날짜 문서 가져오기
+                const dateDocRef = doc(db, 'availableDates', today);
+                const dateDoc = await getDoc(dateDocRef);
+                
+                if (dateDoc.exists()) {
+                    const data = dateDoc.data();
+                    
+                    // 테이블 업데이트
+                    updateScheduleTable(data.timeSlots);
+                    
+                    // 실시간 예약 현황도 함께 표시
+                    await updateReservationCounts(today);
+                } else {
+                    console.log('오늘 날짜의 교육 일정이 없습니다.');
+                    setAllUnavailable();
+                }
+            } catch (error) {
+                console.error('교육 일정 로드 중 오류:', error);
+                setAllUnavailable();
+            }
+        }
+
+        // 예약 현황 카운트 업데이트
+        async function updateReservationCounts(date) {
+            try {
+                const reservationsRef = collection(db, 'reservations');
+                const q = query(
+                    reservationsRef, 
+                    where('date', '==', date),
+                    where('status', '==', '예약됨')
+                );
+                const querySnapshot = await getDocs(q);
+                
+                // 시간대와 교육구분별로 예약 수 계산
+                const counts = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const key = `${data.time}-${data.courseType}`;
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+                
+                // 테이블에 실제 예약 수 반영
+                updateTableWithCounts(counts);
+            } catch (error) {
+                console.error('예약 현황 로드 중 오류:', error);
+            }
+        }
+
+        // 스케줄 테이블 업데이트
+        function updateScheduleTable(timeSlots) {
+            if (!timeSlots) {
+                setAllUnavailable();
+                return;
+            }
+
+            const times = ['08시', '10시', '13시', '15시'];
+            const courses = ['기능', '도로기초', '도봉'];
+            const tbody = document.querySelector('.schedule-table tbody');
+            
+            tbody.innerHTML = ''; // 기존 내용 초기화
+            
+            times.forEach(time => {
+                const row = document.createElement('tr');
+                
+                // 시간 셀
+                const timeCell = document.createElement('td');
+                timeCell.className = 'time-cell';
+                timeCell.textContent = time;
+                row.appendChild(timeCell);
+                
+                // 각 교육 구분별 셀
+                courses.forEach(course => {
+                    const cell = document.createElement('td');
+                    
+                    if (timeSlots[time] && timeSlots[time][course]) {
+                        const slot = timeSlots[time][course];
+                        if (slot.isAvailable) {
+                            cell.textContent = `${slot.currentCount || 0}/${slot.maxCapacity}`;
+                            cell.dataset.time = time;
+                            cell.dataset.course = course;
+                        } else {
+                            cell.textContent = '미개설';
+                            cell.className = 'unavailable';
+                        }
+                    } else {
+                        cell.textContent = '미개설';
+                        cell.className = 'unavailable';
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // 실제 예약 수를 테이블에 반영
+        function updateTableWithCounts(counts) {
+            const cells = document.querySelectorAll('.schedule-table td[data-time][data-course]');
+            
+            cells.forEach(cell => {
+                const time = cell.dataset.time;
+                const course = cell.dataset.course;
+                const key = `${time}-${course}`;
+                const count = counts[key] || 0;
+                
+                // 현재 표시된 최대 인원 수 가져오기
+                const currentText = cell.textContent;
+                const maxCapacity = currentText.split('/')[1];
+                
+                if (maxCapacity) {
+                    cell.textContent = `${count}/${maxCapacity}`;
+                }
+            });
+        }
+
+        // 모든 셀을 미개설로 설정
+        function setAllUnavailable() {
+            const times = ['08시', '10시', '13시', '15시'];
+            const tbody = document.querySelector('.schedule-table tbody');
+            
+            tbody.innerHTML = '';
+            
+            times.forEach(time => {
+                const row = document.createElement('tr');
+                
+                const timeCell = document.createElement('td');
+                timeCell.className = 'time-cell';
+                timeCell.textContent = time;
+                row.appendChild(timeCell);
+                
+                for (let i = 0; i < 3; i++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = '미개설';
+                    cell.className = 'unavailable';
+                    row.appendChild(cell);
+                }
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // 페이지 로드시 실행
+        window.addEventListener('load', () => {
+            updateCurrentDate();
+            loadTodaySchedule();
+            
+            // 5초마다 자동 새로고침 (실시간 업데이트)
+            setInterval(loadTodaySchedule, 5000);
+        });
+    </script>
+</body>
+</html>
