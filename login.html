@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 로그인 - 육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 로그인 컨테이너 */
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-header h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        /* 폼 스타일 */
+        .login-form {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid #333;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #999;
+        }
+
+        /* 로그인 버튼 */
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 1rem;
+        }
+
+        .login-button:hover {
+            background-color: #2e7d32;
+        }
+
+        .login-button:active {
+            transform: translateY(1px);
+        }
+
+        .login-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 에러 메시지 */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* 로딩 스피너 */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            display: none;
+        }
+
+        .loading .loading-text {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .loading .button-text {
+            display: none;
+        }
+
+        /* 추가 링크 */
+        .additional-links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .additional-links a {
+            color: #2e7d32;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .additional-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 1.2rem;
+            }
+
+            .login-box {
+                padding: 2rem 1.5rem;
+            }
+
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+
+            .login-container {
+                padding: 1rem;
+            }
+
+            .login-box {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">육사</div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="reservation.html">예약하기</a></li>
+            <li><a href="check.html">예약조회</a></li>
+            <li><a href="login.html">관리자</a></li>
+        </ul>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 로그인 컨테이너 -->
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h2>관리자 페이지</h2>
+                <p>Admin Page</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">아이디</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="admin@example.com" required autofocus>
+                    <div id="emailError" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="비밀번호를 입력하세요" required>
+                    <div id="passwordError" class="error-message"></div>
+                </div>
+
+                <button type="submit" id="loginButton" class="login-button">
+                    <span class="button-text">로그인</span>
+                    <span class="loading-text">
+                        <span class="spinner"></span>
+                        로그인 중...
+                    </span>
+                </button>
+
+                <div id="generalError" class="error-message" style="margin-top: 1rem; text-align: center;"></div>
+            </form>
+
+            <div class="additional-links">
+                <a href="index.html">← 메인으로 돌아가기</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK 및 JavaScript -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgZxM9bFkVzzLHTvDTY7HsoMVTDfQ-wIY",
+            authDomain: "kma-driving-education-booking.firebaseapp.com",
+            projectId: "kma-driving-education-booking",
+            storageBucket: "kma-driving-education-booking.firebasestorage.app",
+            messagingSenderId: "741013364677",
+            appId: "1:741013364677:web:22f620279dc8e72fcbb5ac"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM 요소
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const generalError = document.getElementById('generalError');
+
+        // 메뉴 토글 기능
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 에러 메시지 표시 함수
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.add('active');
+        }
+
+        // 에러 메시지 숨기기 함수
+        function hideError(element) {
+            element.textContent = '';
+            element.classList.remove('active');
+        }
+
+        // 모든 에러 메시지 숨기기
+        function hideAllErrors() {
+            hideError(emailError);
+            hideError(passwordError);
+            hideError(generalError);
+        }
+
+        // 입력 필드 변경시 에러 메시지 숨기기
+        emailInput.addEventListener('input', () => hideError(emailError));
+        passwordInput.addEventListener('input', () => hideError(passwordError));
+
+        // 관리자 권한 확인 함수
+        async function checkAdminRole(user) {
+            try {
+                // Firestore에서 사용자 문서 확인
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    return userData.role === 'admin';
+                }
+                
+                // 사용자 문서가 없으면 관리자가 아님
+                return false;
+            } catch (error) {
+                console.error('관리자 권한 확인 중 오류:', error);
+                return false;
+            }
+        }
+
+        // 로그인 처리 함수
+        async function handleLogin(email, password) {
+            // 로딩 상태 표시
+            loginButton.disabled = true;
+            loginButton.classList.add('loading');
+            hideAllErrors();
+
+            try {
+                // Firebase Authentication으로 로그인
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 관리자 권한 확인
+                const isAdmin = await checkAdminRole(user);
+                
+                if (isAdmin) {
+                    // 관리자인 경우 admin.html로 이동
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    window.location.href = 'admin.html';
+                } else {
+                    // 관리자가 아닌 경우 로그아웃하고 에러 표시
+                    await auth.signOut();
+                    showError(generalError, '관리자 권한이 없습니다.');
+                }
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                
+                // Firebase 에러 코드에 따른 메시지 표시
+                switch(error.code) {
+                    case 'auth/invalid-email':
+                        showError(emailError, '올바른 이메일 형식이 아닙니다.');
+                        break;
+                    case 'auth/user-not-found':
+                        showError(emailError, '등록되지 않은 계정입니다.');
+                        break;
+                    case 'auth/wrong-password':
+                        showError(passwordError, '비밀번호가 일치하지 않습니다.');
+                        break;
+                    case 'auth/invalid-credential':
+                        showError(generalError, '아이디 또는 비밀번호가 올바르지 않습니다.');
+                        break;
+                    case 'auth/too-many-requests':
+                        showError(generalError, '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요.');
+                        break;
+                    case 'auth/network-request-failed':
+                        showError(generalError, '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+                        break;
+                    default:
+                        showError(generalError, '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+                }
+            } finally {
+                // 로딩 상태 해제
+                loginButton.disabled = false;
+                loginButton.classList.remove('loading');
+            }
+        }
+
+        // 폼 제출 처리
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // 기본 유효성 검사
+            if (!email) {
+                showError(emailError, '이메일을 입력해주세요.');
+                return;
+            }
+            
+            if (!password) {
+                showError(passwordError, '비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            // 이메일 형식 검사
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError(emailError, '올바른 이메일 형식이 아닙니다.');
+                return;
+            }
+            
+            // 로그인 시도
+            await handleLogin(email, password);
+        });
+
+        // 페이지 로드시 이미 로그인된 상태 확인
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 로그인된 사용자가 있으면 관리자 권한 확인
+                const isAdmin = await checkAdminRole(user);
+                if (isAdmin) {
+                    // 관리자면 admin.html로 이동
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    window.location.href = 'admin.html';
+                } else {
+                    // 관리자가 아니면 로그아웃
+                    await auth.signOut();
+                }
+            }
+        });
+
+        // 엔터키로 로그인
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

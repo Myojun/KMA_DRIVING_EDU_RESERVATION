@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - 육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 로그아웃 버튼 */
+        .logout-button {
+            display: block;
+            width: calc(100% - 3rem);
+            margin: 1.5rem;
+            padding: 0.8rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: #c82333;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* 섹션 공통 스타일 */
+        .admin-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        /* 교육 개설 섹션 */
+        .date-input-group {
+            margin-bottom: 2rem;
+        }
+
+        .date-input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .date-input {
+            padding: 0.8rem;
+            border: 2px solid #333;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        /* 시간대 테이블 */
+        .schedule-table {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-table th {
+            text-align: center;
+            padding: 0.8rem;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border: 1px solid #ddd;
+        }
+
+        .schedule-table td {
+            text-align: center;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+        }
+
+        .schedule-table .time-label {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+
+        .capacity-input {
+            width: 60px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .capacity-input:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        /* 버튼 그룹 */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-button {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .create-button {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .create-button:hover {
+            background-color: #1b5e20;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        /* 교육 조회 섹션 */
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-button {
+            padding: 0.8rem 2rem;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-button:hover {
+            background-color: #1b5e20;
+        }
+
+        /* 결과 테이블 */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 0.8rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .result-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .result-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 취소 버튼 */
+        .cancel-button {
+            padding: 0.4rem 0.8rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .cancel-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 메시지 스타일 */
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .message.active {
+            display: block;
+        }
+
+        .no-result {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .main-container {
+                padding: 0 1rem;
+            }
+
+            .admin-section {
+                padding: 1.5rem;
+            }
+
+            .schedule-table {
+                font-size: 0.85rem;
+            }
+
+            .capacity-input {
+                width: 50px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-button {
+                width: 100%;
+            }
+
+            .result-table {
+                font-size: 0.85rem;
+            }
+
+            .result-table th,
+            .result-table td {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">육사</div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>관리자 메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="admin.html">관리자 대시보드</a></li>
+        </ul>
+        <button class="logout-button" id="logoutButton">로그아웃</button>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-container">
+        <!-- 교육 개설 섹션 -->
+        <section class="admin-section">
+            <h2 class="section-header">교육 개설</h2>
+            
+            <div id="createMessage" class="message"></div>
+
+            <div class="date-input-group">
+                <label for="createDate">날짜 :</label>
+                <input type="date" id="createDate" class="date-input">
+            </div>
+
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>기능</th>
+                        <th>도로기초</th>
+                        <th>도봉</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-label">08시</td>
+                        <td><input type="number" class="capacity-input" data-time="08시" data-course="기능" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="08시" data-course="도로기초" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="08시" data-course="도봉" min="0" max="99" value="4"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-label">10시</td>
+                        <td><input type="number" class="capacity-input" data-time="10시" data-course="기능" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="10시" data-course="도로기초" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="10시" data-course="도봉" min="0" max="99" value="4"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-label">13시</td>
+                        <td><input type="number" class="capacity-input" data-time="13시" data-course="기능" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="13시" data-course="도로기초" min="0" max="99" value="4"></td>
+                        <td><input type="number" class="capacity-input" data-time="13시" data-course="도봉" min="0" max="99" value="4"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-label">15시</td>
+                        <td><input type="number" class="capacity-input" data-time="15시" data-course="기능" min="0" max="99" value="0"></td>
+                        <td><input type="number" class="capacity-input" data-time="15시" data-course="도로기초" min="0" max="99" value="0"></td>
+                        <td><input type="number" class="capacity-input" data-time="15시" data-course="도봉" min="0" max="99" value="0"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="button-group">
+                <button class="action-button create-button" id="createButton">개설하기</button>
+                <button class="action-button delete-button" id="deleteButton">삭제하기</button>
+            </div>
+        </section>
+
+        <!-- 교육 조회 섹션 -->
+        <section class="admin-section">
+            <h2 class="section-header">교육 조회하기</h2>
+            
+            <div id="searchMessage" class="message"></div>
+
+            <div class="search-form">
+                <div class="date-input-group">
+                    <label for="searchDate">날짜 :</label>
+                    <input type="date" id="searchDate" class="date-input">
+                </div>
+                <button class="search-button" id="searchButton">조회하기</button>
+            </div>
+
+            <div id="resultWrapper">
+                <div class="no-result" id="noResult">
+                    조회할 날짜를 선택해주세요.
+                </div>
+                <table class="result-table" id="resultTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>시간</th>
+                            <th>교육구분</th>
+                            <th>이름</th>
+                            <th>학년</th>
+                            <th>중대</th>
+                            <th>전화번호</th>
+                            <th>예약상태</th>
+                            <th>비고</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody">
+                        <!-- 조회 결과가 여기에 표시됩니다 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase SDK 및 JavaScript -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, writeBatch, runTransaction } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgZxM9bFkVzzLHTvDTY7HsoMVTDfQ-wIY",
+            authDomain: "kma-driving-education-booking.firebaseapp.com",
+            projectId: "kma-driving-education-booking",
+            storageBucket: "kma-driving-education-booking.firebasestorage.app",
+            messagingSenderId: "741013364677",
+            appId: "1:741013364677:web:22f620279dc8e72fcbb5ac"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 세션 체크
+        if (!sessionStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'login.html';
+        }
+
+        // DOM 요소
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+        const logoutButton = document.getElementById('logoutButton');
+        const createDate = document.getElementById('createDate');
+        const createButton = document.getElementById('createButton');
+        const deleteButton = document.getElementById('deleteButton');
+        const searchDate = document.getElementById('searchDate');
+        const searchButton = document.getElementById('searchButton');
+        const createMessage = document.getElementById('createMessage');
+        const searchMessage = document.getElementById('searchMessage');
+        const noResult = document.getElementById('noResult');
+        const resultTable = document.getElementById('resultTable');
+        const resultTableBody = document.getElementById('resultTableBody');
+
+        // 메뉴 토글 기능
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 로그아웃
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+            }
+        });
+
+        // 메시지 표시 함수
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type} active`;
+            setTimeout(() => {
+                element.classList.remove('active');
+            }, 5000);
+        }
+
+        // 교육 개설 함수
+        async function createSchedule() {
+            const date = createDate.value;
+            
+            if (!date) {
+                showMessage(createMessage, '날짜를 선택해주세요.', 'error');
+                return;
+            }
+
+            try {
+                // 기존 교육 확인
+                const dateDocRef = doc(db, 'availableDates', date);
+                const dateDoc = await getDoc(dateDocRef);
+                
+                if (dateDoc.exists()) {
+                    showMessage(createMessage, 
+                        '기개설일입니다. 수정을 원할 시에는 삭제 후 다시 개설해주십시오.\n' +
+                        '[주의!] 교육을 삭제할 시 예약된 인원이 함께 삭제됩니다.', 
+                        'warning'
+                    );
+                    return;
+                }
+
+                // 시간대별 데이터 수집
+                const timeSlots = {};
+                const times = ['08시', '10시', '13시', '15시'];
+                const courses = ['기능', '도로기초', '도봉'];
+                
+                times.forEach(time => {
+                    timeSlots[time] = {};
+                    courses.forEach(course => {
+                        const input = document.querySelector(`.capacity-input[data-time="${time}"][data-course="${course}"]`);
+                        const maxCapacity = parseInt(input.value) || 0;
+                        
+                        timeSlots[time][course] = {
+                            maxCapacity: maxCapacity,
+                            currentCount: 0,
+                            isAvailable: maxCapacity > 0
+                        };
+                    });
+                });
+
+                // Firestore에 저장
+                await setDoc(dateDocRef, {
+                    date: date,
+                    isActive: true,
+                    timeSlots: timeSlots,
+                    createdAt: serverTimestamp(),
+                    createdBy: auth.currentUser?.uid || 'admin'
+                });
+
+                showMessage(createMessage, '교육이 성공적으로 개설되었습니다.', 'success');
+                createDate.value = '';
+                
+            } catch (error) {
+                console.error('교육 개설 오류:', error);
+                showMessage(createMessage, '교육 개설 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 교육 삭제 함수
+        async function deleteSchedule() {
+            const date = createDate.value;
+            
+            if (!date) {
+                showMessage(createMessage, '날짜를 선택해주세요.', 'error');
+                return;
+            }
+
+            if (!confirm(`${date} 교육을 삭제하시겠습니까?\n[주의!] 해당 날짜의 모든 예약도 함께 삭제됩니다.`)) {
+                return;
+            }
+
+            try {
+                const batch = writeBatch(db);
+                
+                // 1. 교육 일정 삭제
+                const dateDocRef = doc(db, 'availableDates', date);
+                batch.delete(dateDocRef);
+                
+                // 2. 해당 날짜의 모든 예약 삭제
+                const reservationsRef = collection(db, 'reservations');
+                const q = query(reservationsRef, where('date', '==', date));
+                const querySnapshot = await getDocs(q);
+                
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                
+                // 배치 실행
+                await batch.commit();
+                
+                showMessage(createMessage, `${date} 교육과 ${querySnapshot.size}개의 예약이 삭제되었습니다.`, 'success');
+                createDate.value = '';
+                
+            } catch (error) {
+                console.error('교육 삭제 오류:', error);
+                showMessage(createMessage, '교육 삭제 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 예약 조회 함수
+        async function searchReservations() {
+            const date = searchDate.value;
+            
+            if (!date) {
+                showMessage(searchMessage, '날짜를 선택해주세요.', 'error');
+                return;
+            }
+
+            try {
+                // 예약 조회
+                const reservationsRef = collection(db, 'reservations');
+                const q = query(reservationsRef, where('date', '==', date));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    noResult.textContent = '해당 날짜에 예약이 없습니다.';
+                    noResult.style.display = 'block';
+                    resultTable.style.display = 'none';
+                    return;
+                }
+
+                // 결과 표시
+                displayReservations(querySnapshot);
+                noResult.style.display = 'none';
+                resultTable.style.display = 'table';
+                
+            } catch (error) {
+                console.error('예약 조회 오류:', error);
+                showMessage(searchMessage, '예약 조회 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 예약 목록 표시 함수
+        function displayReservations(querySnapshot) {
+            resultTableBody.innerHTML = '';
+            
+            const reservations = [];
+            querySnapshot.forEach((doc) => {
+                reservations.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            
+            // 시간순 정렬
+            reservations.sort((a, b) => {
+                const timeOrder = { '08시': 1, '10시': 2, '13시': 3, '15시': 4 };
+                return timeOrder[a.time] - timeOrder[b.time];
+            });
+
+            // 테이블에 표시
+            reservations.forEach(reservation => {
+                const row = document.createElement('tr');
+                
+                if (reservation.status === '취소됨') {
+                    row.style.backgroundColor = '#f5f5f5';
+                }
+                
+                row.innerHTML = `
+                    <td>${reservation.date}</td>
+                    <td>${reservation.time}</td>
+                    <td>${reservation.courseType}</td>
+                    <td>${reservation.name}</td>
+                    <td>${reservation.grade}학년</td>
+                    <td>${reservation.unit}중대</td>
+                    <td>${reservation.phone}</td>
+                    <td style="color: ${reservation.status === '예약됨' ? '#2e7d32' : '#999'}; font-weight: 600;">
+                        ${reservation.status}
+                    </td>
+                    <td>${reservation.note || ''}</td>
+                    <td>
+                        ${reservation.status === '예약됨' 
+                            ? `<button class="cancel-button" onclick="cancelReservation('${reservation.id}', '${reservation.date}', '${reservation.time}', '${reservation.courseType}')">[ 취소 ]</button>`
+                            : '<span style="color: #999;">취소됨</span>'
+                        }
+                    </td>
+                `;
+                
+                resultTableBody.appendChild(row);
+            });
+        }
+
+        // 예약 취소 함수
+        window.cancelReservation = async function(reservationId, date, time, courseType) {
+            if (!confirm('예약을 취소하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const reservationRef = doc(db, 'reservations', reservationId);
+                const dateDocRef = doc(db, 'availableDates', date);
+                
+                await runTransaction(db, async (transaction) => {
+                    const dateDoc = await transaction.get(dateDocRef);
+                    
+                    // 예약 상태 변경
+                    transaction.update(reservationRef, {
+                        status: '취소됨',
+                        canceledAt: serverTimestamp(),
+                        canceledBy: 'admin'
+                    });
+                    
+                    // 카운트 감소
+                    if (dateDoc.exists()) {
+                        const data = dateDoc.data();
+                        if (data.timeSlots && data.timeSlots[time] && data.timeSlots[time][courseType]) {
+                            const currentCount = data.timeSlots[time][courseType].currentCount || 0;
+                            const updatePath = `timeSlots.${time}.${courseType}.currentCount`;
+                            
+                            transaction.update(dateDocRef, {
+                                [updatePath]: Math.max(0, currentCount - 1)
+                            });
+                        }
+                    }
+                });
+
+                showMessage(searchMessage, '예약이 취소되었습니다.', 'success');
+                await searchReservations();
+                
+            } catch (error) {
+                console.error('예약 취소 오류:', error);
+                showMessage(searchMessage, '예약 취소 중 오류가 발생했습니다.', 'error');
+            }
+        };
+
+        // 이벤트 리스너
+        createButton.addEventListener('click', createSchedule);
+        deleteButton.addEventListener('click', deleteSchedule);
+        searchButton.addEventListener('click', searchReservations);
+
+        // 오늘 날짜 기본값 설정
+        const today = new Date().toISOString().split('T')[0];
+        createDate.value = today;
+        searchDate.value = today;
+    </script>
+</body>
+</html>
