@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약조회 - 육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 브레드크럼 */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #2e7d32;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        /* 조회 폼 섹션 */
+        .search-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #333;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        .search-button {
+            padding: 0.8rem 2rem;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+
+        .search-button:hover {
+            background-color: #1b5e20;
+        }
+
+        .search-button:active {
+            transform: translateY(1px);
+        }
+
+        /* 결과 테이블 섹션 */
+        .result-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #2e7d32;
+        }
+
+        .result-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .no-result {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 테이블 스타일 */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .result-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-table td {
+            background-color: white;
+        }
+
+        .result-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 상태별 스타일 */
+        .status-active {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .status-cancelled {
+            color: #999;
+            font-weight: 600;
+        }
+
+        /* 취소 버튼 */
+        .cancel-button {
+            padding: 0.5rem 1rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .cancel-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 로딩 스피너 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2e7d32;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 1.2rem;
+            }
+
+            .main-container {
+                padding: 0 1rem 2rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+            .search-button {
+                width: 100%;
+            }
+
+            .result-table {
+                font-size: 0.85rem;
+            }
+
+            .result-table th,
+            .result-table td {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .cancel-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            /* 모바일에서 테이블 스크롤 가능하게 */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">육사</div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="reservation.html">예약하기</a></li>
+            <li><a href="check.html">예약조회</a></li>
+            <li><a href="login.html">관리자</a></li>
+        </ul>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 브레드크럼 -->
+    <div class="breadcrumb">
+        <a href="index.html">메인</a> &gt; 예약확인
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-container">
+        <!-- 조회 폼 -->
+        <section class="search-section">
+            <form id="searchForm" class="search-form">
+                <div class="form-group">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           placeholder="홍길동" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">전화번호</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           placeholder="010-1234-5678" 
+                           pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" required>
+                </div>
+                <button type="submit" class="search-button">조회하기</button>
+            </form>
+        </section>
+
+        <!-- 조회 결과 -->
+        <section class="result-section">
+            <div class="result-header">
+                <h2>예약 조회 결과</h2>
+            </div>
+            
+            <!-- 로딩 스피너 -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem;">조회 중...</p>
+            </div>
+
+            <!-- 결과 없음 메시지 -->
+            <div class="no-result" id="noResult">
+                조회하실 예약 정보를 입력해주세요.
+            </div>
+
+            <!-- 결과 테이블 -->
+            <div class="table-wrapper" id="resultWrapper" style="display: none;">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>시간</th>
+                            <th>교육구분</th>
+                            <th>이름</th>
+                            <th>학년</th>
+                            <th>중대</th>
+                            <th>전화번호</th>
+                            <th>예약상태</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody">
+                        <!-- 조회 결과가 여기에 표시됩니다 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase SDK 및 JavaScript -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, serverTimestamp, runTransaction } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgZxM9bFkVzzLHTvDTY7HsoMVTDfQ-wIY",
+            authDomain: "kma-driving-education-booking.firebaseapp.com",
+            projectId: "kma-driving-education-booking",
+            storageBucket: "kma-driving-education-booking.firebasestorage.app",
+            messagingSenderId: "741013364677",
+            appId: "1:741013364677:web:22f620279dc8e72fcbb5ac"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // DOM 요소
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+        const searchForm = document.getElementById('searchForm');
+        const loading = document.getElementById('loading');
+        const noResult = document.getElementById('noResult');
+        const resultWrapper = document.getElementById('resultWrapper');
+        const resultTableBody = document.getElementById('resultTableBody');
+
+        // 메뉴 토글 기능
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 날짜 포맷 함수
+        function formatDateDisplay(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        }
+
+        // 예약 조회 함수
+        async function searchReservations(name, phone) {
+            try {
+                // 로딩 표시
+                loading.classList.add('active');
+                noResult.style.display = 'none';
+                resultWrapper.style.display = 'none';
+
+                // Firestore 쿼리
+                const reservationsRef = collection(db, 'reservations');
+                const q = query(
+                    reservationsRef,
+                    where('name', '==', name),
+                    where('phone', '==', phone)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                
+                // 로딩 숨기기
+                loading.classList.remove('active');
+
+                if (querySnapshot.empty) {
+                    // 결과 없음
+                    noResult.textContent = '조회된 예약이 없습니다.';
+                    noResult.style.display = 'block';
+                    resultWrapper.style.display = 'none';
+                } else {
+                    // 결과 표시
+                    displayResults(querySnapshot);
+                    noResult.style.display = 'none';
+                    resultWrapper.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('예약 조회 중 오류:', error);
+                loading.classList.remove('active');
+                noResult.textContent = '조회 중 오류가 발생했습니다. 다시 시도해주세요.';
+                noResult.style.display = 'block';
+                resultWrapper.style.display = 'none';
+            }
+        }
+
+        // 조회 결과 표시 함수
+        function displayResults(querySnapshot) {
+            resultTableBody.innerHTML = '';
+            
+            // 날짜 기준으로 정렬
+            const reservations = [];
+            querySnapshot.forEach((doc) => {
+                reservations.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            
+            // 날짜와 시간으로 정렬
+            reservations.sort((a, b) => {
+                if (a.date !== b.date) {
+                    return a.date.localeCompare(b.date);
+                }
+                return a.time.localeCompare(b.time);
+            });
+
+            // 테이블에 추가
+            reservations.forEach(reservation => {
+                const row = document.createElement('tr');
+                
+                // 상태에 따른 행 스타일
+                if (reservation.status === '취소됨') {
+                    row.style.backgroundColor = '#f5f5f5';
+                }
+                
+                row.innerHTML = `
+                    <td>${formatDateDisplay(reservation.date)}</td>
+                    <td>${reservation.time}</td>
+                    <td>${reservation.courseType}</td>
+                    <td>${reservation.name}</td>
+                    <td>${reservation.grade}학년</td>
+                    <td>${reservation.unit}중대</td>
+                    <td>${reservation.phone}</td>
+                    <td class="${reservation.status === '예약됨' ? 'status-active' : 'status-cancelled'}">
+                        ${reservation.status}
+                    </td>
+                    <td>
+                        ${reservation.status === '예약됨' 
+                            ? `<button class="cancel-button" onclick="cancelReservation('${reservation.id}', '${reservation.date}', '${reservation.time}', '${reservation.courseType}')">[ 취소 ]</button>`
+                            : '<span style="color: #999;">취소됨</span>'
+                        }
+                    </td>
+                `;
+                
+                resultTableBody.appendChild(row);
+            });
+        }
+
+        // 예약 취소 함수
+        window.cancelReservation = async function(reservationId, date, time, courseType) {
+            if (!confirm('정말로 예약을 취소하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                // 트랜잭션으로 처리
+                const reservationRef = doc(db, 'reservations', reservationId);
+                const dateDocRef = doc(db, 'availableDates', date);
+                
+                await runTransaction(db, async (transaction) => {
+                    // availableDates 문서 확인
+                    const dateDoc = await transaction.get(dateDocRef);
+                    
+                    if (dateDoc.exists()) {
+                        // 예약 상태를 "취소됨"으로 변경
+                        transaction.update(reservationRef, {
+                            status: '취소됨',
+                            canceledAt: serverTimestamp(),
+                            canceledBy: 'user'
+                        });
+                        
+                        // 해당 시간대의 currentCount 감소
+                        const data = dateDoc.data();
+                        if (data.timeSlots && 
+                            data.timeSlots[time] && 
+                            data.timeSlots[time][courseType]) {
+                            
+                            const currentCount = data.timeSlots[time][courseType].currentCount || 0;
+                            const updatePath = `timeSlots.${time}.${courseType}.currentCount`;
+                            
+                            transaction.update(dateDocRef, {
+                                [updatePath]: Math.max(0, currentCount - 1)
+                            });
+                        }
+                    } else {
+                        // availableDates가 없어도 예약은 취소
+                        transaction.update(reservationRef, {
+                            status: '취소됨',
+                            canceledAt: serverTimestamp(),
+                            canceledBy: 'user'
+                        });
+                    }
+                });
+
+                alert('예약이 취소되었습니다.');
+                
+                // 목록 새로고침
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                await searchReservations(name, phone);
+                
+            } catch (error) {
+                console.error('예약 취소 중 오류:', error);
+                alert('예약 취소 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        };
+
+        // 폼 제출 처리
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (!name || !phone) {
+                alert('이름과 전화번호를 모두 입력해주세요.');
+                return;
+            }
+            
+            await searchReservations(name, phone);
+        });
+
+        // 전화번호 자동 하이픈 추가
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            let formattedValue = '';
+            
+            if (value.length <= 3) {
+                formattedValue = value;
+            } else if (value.length <= 7) {
+                formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length <= 11) {
+                formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            }
+            
+            e.target.value = formattedValue;
+        });
+    </script>
+</body>
+</html>
