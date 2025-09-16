@@ -547,7 +547,9 @@
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <div class="logo">육사</div>
+                <div class="logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Korea_Military_Academy_Insignia.svg/1200px-Korea_Military_Academy_Insignia.svg.png" width="60" height="60">
+                </div>
                 <div class="title-section">
                     <h1>육군사관학교 운전교육 예약시스템</h1>
                     <p>KMA Driving Edu Reservation</p>
@@ -571,7 +573,9 @@
             <li><a href="index.html">홈</a></li>
             <li><a href="reservation.html">예약하기</a></li>
             <li><a href="check.html">예약조회</a></li>
-            <li><a href="login.html">관리자</a></li>
+            <li><a href="kineung.html">기능코스 예·복습 자료실</a></li>
+            <li><a href="road.html">도로주행 예·복습 자료실</a></li>
+            <li><a href="https://www.safedriving.or.kr/">안전운전통합민원 사이트</a></li>
         </ul>
     </nav>
 
@@ -782,8 +786,6 @@
         let selectedDate = null;
         let availableSchedule = null;
         let reservationListener = null;
-        let lastLoadedDate = null; // 캐시를 위한 마지막 로드 날짜
-        let cachedData = {}; // 날짜별 데이터 캐싱
 
         // 메뉴 토글 기능
         const menuToggle = document.getElementById('menuToggle');
@@ -897,49 +899,45 @@
             document.getElementById('selectedDateDisplay').textContent = `${dateString} 교육일정`;
             document.getElementById('selectedDateForm').textContent = dateString;
             
-            const formattedDate = formatDate(selectedDate);
-            
-            // 캐시 확인 - 같은 날짜면 다시 로드하지 않음
-            if (lastLoadedDate === formattedDate && cachedData[formattedDate]) {
-                updateScheduleTable(cachedData[formattedDate].timeSlots);
-                setupRealtimeListener(formattedDate);
-                return;
-            }
-            
             // 로딩 표시
             document.getElementById('loadingText').style.display = 'block';
             
             // 일정 로드 및 실시간 리스너 설정
-            await loadAndListenSchedule(formattedDate);
-            lastLoadedDate = formattedDate;
+            await loadAndListenSchedule(formatDate(selectedDate));
         }
 
         // 일정 로드 및 실시간 리스너
         async function loadAndListenSchedule(dateString) {
             try {
-                // 1. 교육 일정 로드 (캐시 확인)
-                if (!cachedData[dateString]) {
-                    const dateDocRef = doc(db, 'availableDates', dateString);
-                    const dateDoc = await getDoc(dateDocRef);
-                    
-                    if (dateDoc.exists()) {
-                        cachedData[dateString] = dateDoc.data();
-                        availableSchedule = cachedData[dateString];
-                    } else {
-                        availableSchedule = null;
-                    }
-                } else {
-                    availableSchedule = cachedData[dateString];
-                }
+                // 1. 교육 일정 로드
+                const dateDocRef = doc(db, 'availableDates', dateString);
+                const dateDoc = await getDoc(dateDocRef);
                 
-                if (availableSchedule) {
+                if (dateDoc.exists()) {
+                    availableSchedule = dateDoc.data();
                     updateScheduleTable(availableSchedule.timeSlots);
                 } else {
+                    availableSchedule = null;
                     setAllUnavailable();
                 }
 
-                // 2. 실시간 리스너 설정 (분리)
-                await setupRealtimeListener(dateString);
+                // 2. 실시간 예약 현황 리스너 설정
+                const reservationsRef = collection(db, 'reservations');
+                const q = query(
+                    reservationsRef,
+                    where('date', '==', dateString),
+                    where('status', '==', '예약됨')
+                );
+
+                reservationListener = onSnapshot(q, (snapshot) => {
+                    const counts = {};
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const key = `${data.time}-${data.courseType}`;
+                        counts[key] = (counts[key] || 0) + 1;
+                    });
+                    updateReservationCounts(counts);
+                });
 
             } catch (error) {
                 console.error('일정 로드 오류:', error);
@@ -947,40 +945,6 @@
             } finally {
                 document.getElementById('loadingText').style.display = 'none';
             }
-        }
-        
-        // 실시간 리스너 설정 (분리된 함수)
-        async function setupRealtimeListener(dateString) {
-            // 기존 리스너가 있으면 재사용
-            if (reservationListener) return;
-            
-            const reservationsRef = collection(db, 'reservations');
-            const q = query(
-                reservationsRef,
-                where('date', '==', dateString),
-                where('status', '==', '예약됨')
-            );
-
-            // 초기 데이터 로드
-            const snapshot = await getDocs(q);
-            const counts = {};
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const key = `${data.time}-${data.courseType}`;
-                counts[key] = (counts[key] || 0) + 1;
-            });
-            updateReservationCounts(counts);
-
-            // 실시간 리스너는 선택사항 (필요시에만 활성화)
-            // reservationListener = onSnapshot(q, (snapshot) => {
-            //     const counts = {};
-            //     snapshot.forEach((doc) => {
-            //         const data = doc.data();
-            //         const key = `${data.time}-${data.courseType}`;
-            //         counts[key] = (counts[key] || 0) + 1;
-            //     });
-            //     updateReservationCounts(counts);
-            // });
         }
 
         // 스케줄 테이블 업데이트
@@ -1213,20 +1177,6 @@
                 alert('예약이 완료되었습니다!');
                 e.target.reset();
                 
-                // 캐시 업데이트만 하고 전체 리로드 방지
-                const key = `${reservationData.time}-${reservationData.courseType}`;
-                const cell = document.querySelector(`td[data-time="${reservationData.time}"][data-course="${reservationData.courseType}"]`);
-                if (cell) {
-                    const currentCount = parseInt(cell.dataset.currentCount || 0);
-                    const maxCapacity = parseInt(cell.dataset.maxCapacity);
-                    cell.textContent = `${currentCount + 1}/${maxCapacity}`;
-                    cell.dataset.currentCount = currentCount + 1;
-                    
-                    if (currentCount + 1 >= maxCapacity) {
-                        cell.classList.add('full');
-                    }
-                }
-                
             } catch (error) {
                 console.error('예약 처리 중 오류:', error);
                 alert(error.message || '예약 처리 중 오류가 발생했습니다.');
@@ -1267,7 +1217,7 @@
         window.addEventListener('load', () => {
             generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
             
-            // 오늘 날짜 자동 선택 (한 번만)
+            // 오늘 날짜 자동 선택
             const today = new Date();
             selectDate(today.getFullYear(), today.getMonth(), today.getDate());
         });
@@ -1276,15 +1226,6 @@
         window.addEventListener('beforeunload', () => {
             if (reservationListener) {
                 reservationListener();
-            }
-        });
-        
-        // 페이지 활성화시 데이터 새로고침 (선택사항)
-        document.addEventListener('visibilitychange', async () => {
-            if (!document.hidden && selectedDate) {
-                // 페이지가 다시 보일 때만 현재 선택된 날짜 데이터 업데이트
-                const dateString = formatDate(selectedDate);
-                await setupRealtimeListener(dateString);
             }
         });
     </script>
