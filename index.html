@@ -684,8 +684,16 @@
             updateCurrentDate();
             loadTodaySchedule();
             
-            // 5초마다 자동 새로고침 (실시간 업데이트)
-            setInterval(loadTodaySchedule, 5000);
+            // 30초마다 한 번만 새로고침 (읽기 횟수 대폭 감소)
+            // 필요시 주석 처리하여 완전히 비활성화 가능
+            setInterval(loadTodaySchedule, 30000);
+        });
+        
+        // 페이지가 다시 활성화될 때만 새로고침
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                loadTodaySchedule();
+            }
         });
     </script>
 </body>
