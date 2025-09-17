@@ -181,6 +181,18 @@
             color: #555;
         }
 
+        /* ✅ 공지사항 내용 스타일 */
+
+        .announcement-content {
+
+            white-space: pre-wrap;
+
+            color: #555;
+
+            line-height: 1.8;
+
+        }
+        
         .contact-info {
             margin-top: 2rem;
             padding-top: 1.5rem;
@@ -399,7 +411,7 @@
         <!-- 안내 섹션 -->
         <section class="info-section">
             <h2>📢 공지사항</h2>
-            <div class="info-text" id="announcementText">
+            <div class="info-text" id="announcementContent">
                 <div style="color: #999; font-style: italic;">공지사항을 불러오는 중...</div>
             </div>
             
@@ -480,6 +492,35 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // ✅ 공지사항 불러오기 함수
+        async function loadAnnouncement() {
+            try {
+                const docRef = doc(db, 'announcements', 'main');
+                const docSnap = await getDoc(docRef);
+                const container = document.getElementById('announcementContent');
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    let html = '';
+
+                    if (data.createdAt) {
+                        const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                        const dateString = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+                        html += `<div style="color: #2e7d32; font-weight: bold; margin-bottom: 0.5rem;">공지 작성일 : ${dateString}</div>`;
+                    }
+
+                    html += `<div class="announcement-content">${data.content || '내용이 없습니다.'}</div>`;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div style="color: #999; font-style: italic;">공지사항이 없습니다</div>';
+                }
+            } catch (error) {
+                console.error('공지사항 불러오기 오류:', error);
+                document.getElementById('announcementContent').innerHTML =
+                    '<div style="color: #999; font-style: italic;">공지사항을 불러올 수 없습니다.</div>';
+            }
+        }
+        
         // DOM 요소 가져오기
         const menuToggle = document.getElementById('menuToggle');
         const navMenu = document.getElementById('navMenu');
@@ -682,6 +723,13 @@
             // 30초마다 한 번만 새로고침 (읽기 횟수 대폭 감소)
             // 필요시 주석 처리하여 완전히 비활성화 가능
             setInterval(loadTodaySchedule, 30000);
+        });
+
+        // 페이지 로드시 실행
+        window.addEventListener('load', () => {
+            loadAnnouncement();
+            
+            setInterval(loadTodaySchedule, 300000);
         });
         
         // 페이지가 다시 활성화될 때만 새로고침
