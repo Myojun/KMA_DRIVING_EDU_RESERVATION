@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이용 가이드 - 육군사관학교 운전교육 예약시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-section h1 {
+            font-size: 1.5rem;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        /* 햄버거 메뉴 버튼 */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover span {
+            background-color: #2e7d32;
+        }
+
+        /* 네비게이션 메뉴 */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-header {
+            padding: 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 브레드크럼 */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #2e7d32;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        /* 페이지 타이틀 섹션 */
+        .page-title-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #2e7d32;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 가이드 섹션 */
+        .guide-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #2e7d32;
+        }
+
+        .guide-number {
+            width: 40px;
+            height: 40px;
+            background-color: #2e7d32;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* 스텝 리스트 */
+        .step-list {
+            margin-bottom: 2rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: #2e7d32;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 1rem;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .step-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 하이라이트 텍스트 */
+        .highlight {
+            background-color: #fff3cd;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        /* 이미지 컨테이너 */
+        .guide-image {
+            width: 100%;
+            margin: 2rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .guide-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-caption {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* 팁 박스 */
+        .tip-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .tip-box h4 {
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-box p {
+            color: #555;
+            margin: 0.5rem 0;
+        }
+
+        /* 경고 박스 */
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-box p {
+            color: #856404;
+        }
+
+        /* 버튼 스타일 */
+        .guide-button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: #2e7d32;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+        }
+
+        .guide-button:hover {
+            background-color: #1b5e20;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 1.2rem;
+            }
+
+            .main-container {
+                padding: 0 1rem 2rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .guide-section {
+                padding: 1.5rem;
+            }
+
+            .guide-header {
+                font-size: 1.2rem;
+            }
+
+            .step-item {
+                flex-direction: column;
+            }
+
+            .step-number {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-section p {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Korea_Military_Academy_Insignia.svg/1200px-Korea_Military_Academy_Insignia.svg.png" width="60" height="60">
+                </div>
+                <div class="title-section">
+                    <h1>육군사관학교 운전교육 예약시스템</h1>
+                    <p>KMA Driving Edu Reservation</p>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 네비게이션 메뉴 -->
+    <nav class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>메뉴</h3>
+            <button class="nav-close" id="navClose">×</button>
+        </div>
+        <ul>
+            <li><a href="index.html">홈</a></li>
+            <li><a href="instruction.html">이용 가이드</a></li>
+            <li><a href="reservation.html">예약하기</a></li>
+            <li><a href="check.html">예약조회</a></li>
+            <li><a href="kineung.html">기능코스 예·복습 자료실</a></li>
+            <li><a href="road.html">도로주행 예·복습 자료실</a></li>
+            <li><a href="https://www.safedriving.or.kr/">안전운전통합민원 사이트</a></li>
+        </ul>
+    </nav>
+
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 브레드크럼 -->
+    <div class="breadcrumb">
+        <a href="index.html">홈</a> &gt; 이용 가이드
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-container">
+        <!-- 페이지 타이틀 -->
+        <section class="page-title-section">
+            <h1 class="page-title">📖 예약시스템 이용 가이드</h1>
+            <p class="page-description">운전교육 예약시스템을 쉽고 빠르게 이용하는 방법을 안내합니다.</p>
+        </section>
+
+        <!-- 예약방법 -->
+        <section class="guide-section">
+            <h2 class="guide-header">
+                <span class="guide-number">1</span>
+                <span>예약방법</span>
+            </h2>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">예약하기 페이지 접속</h3>
+                        <p class="step-description">
+                            홈에서 <span class="highlight">예약하기</span> 버튼을 클릭하거나, 
+                            우측 상단 메뉴에서 예약하기를 선택합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">날짜 선택</h3>
+                        <p class="step-description">
+                            캘린더에서 원하는 교육 날짜를 선택합니다. 
+                            선택한 날짜의 교육 일정이 실시간으로 표시됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">시간대 및 교육 선택</h3>
+                        <p class="step-description">
+                            원하는 시간대(08시, 10시, 13시, 15시)와 교육(기능, 도로기초, 도봉)을 선택합니다.
+                            <br>미개설로 표시된 시간대는 예약할 수 없습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3 class="step-title">개인정보 입력</h3>
+                        <p class="step-description">
+                            이름, 학년, 중대, 전화번호를 정확히 입력합니다. 
+                            <br>전화번호는 예약 조회 시 필요하므로 정확히 입력해주세요.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3 class="step-title">예약하기 버튼 클릭</h3>
+                        <p class="step-description">
+                            모든 정보를 입력한 후 <span class="highlight">예약하기</span> 버튼을 클릭하면 예약이 완료됩니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <h4>💡 예약 팁</h4>
+                <p>• 당일 예약 시 예약 반영되지 않으니 미리 확인하고 신청하기 바랍니다.</p>
+                <p>• 동일한 날짜에는 한 번만 예약 가능합니다.</p>
+            </div>
+
+            <!-- 예약 화면 이미지 자리 -->
+            <div class="guide-image">
+                <img src="https://github.com/Myojun/KMA_DRIVING_EDU_RESERVATION/blob/main/%EC%98%88%EC%95%BD%EB%B0%A9%EB%B2%95.png?raw=true" alt="예약 화면 예시">
+            </div>
+            <p class="image-caption">예약하기 화면 예시</p>
+        </section>
+
+        <!-- 예약조회방법 -->
+        <section class="guide-section">
+            <h2 class="guide-header">
+                <span class="guide-number">2</span>
+                <span>예약조회방법</span>
+            </h2>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">예약조회 페이지 접속</h3>
+                        <p class="step-description">
+                            홈에서 <span class="highlight">예약조회</span> 버튼을 클릭하거나, 
+                            우측 상단 메뉴에서 예약조회를 선택합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">이름과 전화번호 입력</h3>
+                        <p class="step-description">
+                            예약 시 입력한 이름과 전화번호를 정확히 입력합니다. 
+                            <br>두 정보가 모두 일치해야 조회가 가능합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">조회하기 버튼 클릭</h3>
+                        <p class="step-description">
+                            <span class="highlight">조회하기</span> 버튼을 클릭하면 예약 내역이 테이블 형태로 표시됩니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ 주의사항</h4>
+                <p>이름과 전화번호가 정확히 일치해야만 조회가 가능합니다.</p>
+            </div>
+
+            <!-- 예약조회 화면 이미지 자리 -->
+            <div class="guide-image">
+                <img src="https://github.com/Myojun/KMA_DRIVING_EDU_RESERVATION/blob/main/%EC%98%88%EC%95%BD%EC%A1%B0%ED%9A%8C%20%EB%B0%A9%EB%B2%95.png?raw=true" alt="예약조회 화면 예시">
+            </div>
+            <p class="image-caption">예약조회 화면 예시</p>
+        </section>
+
+        <!-- 예약취소방법 -->
+        <section class="guide-section">
+            <h2 class="guide-header">
+                <span class="guide-number">3</span>
+                <span>예약취소방법</span>
+            </h2>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">예약조회 페이지에서 예약 확인</h3>
+                        <p class="step-description">
+                            먼저 예약조회 페이지에서 본인의 예약을 조회합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">취소 버튼 클릭</h3>
+                        <p class="step-description">
+                            조회된 예약 내역의 우측에 있는 <span class="highlight">[취소]</span> 버튼을 클릭합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">취소 확인</h3>
+                        <p class="step-description">
+                            취소 확인 메시지가 나타나면 확인을 클릭합니다. 
+                            예약 상태가 "취소됨"으로 변경됩니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ 취소 시 주의사항</h4>
+                <p>• 교육 반영 문자 수신 후 취소 시에는 교관에게 연락해야합니다.</p>
+                <p>• 취소 후 동일한 날짜에 다시 예약하려면 새로 예약해야 합니다.</p>
+            </div>
+
+            <!-- 예약취소 화면 이미지 자리 -->
+            <div class="guide-image">
+                <img src="https://github.com/Myojun/KMA_DRIVING_EDU_RESERVATION/blob/main/%EC%98%88%EC%95%BD%EC%B7%A8%EC%86%8C%20%EB%B0%A9%EB%B2%95.png?raw=true" alt="예약취소 화면 예시">
+            </div>
+            <p class="image-caption">예약취소 화면 예시</p>
+
+        </section>
+    </main>
+
+    <script>
+        // 메뉴 토글 기능
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const overlay = document.getElementById('overlay');
+
+        function openMenu() {
+            navMenu.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // 네비게이션 링크 클릭시 메뉴 닫기
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                closeMenu();
+            });
+        });
+    </script>
+</body>
+</html>
