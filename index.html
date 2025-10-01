@@ -268,12 +268,9 @@
         /* 빠른 메뉴 버튼 */
         .quick-menu {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin: 2rem 0;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .quick-button {
@@ -395,6 +392,7 @@
         </div>
         <ul>
             <li><a href="index.html">홈</a></li>
+            <li><a href="instruction.html">이용 가이드</a></li>
             <li><a href="reservation.html">예약하기</a></li>
             <li><a href="check.html">예약조회</a></li>
             <li><a href="kineung.html">기능코스 예·복습 자료실</a></li>
@@ -425,6 +423,7 @@
         <section class="quick-menu">
             <a href="reservation.html" class="quick-button">예약하기</a>
             <a href="check.html" class="quick-button">예약조회</a>
+            <a href="instruction.html" class="quick-button">이용가이드</a>
         </section>
 
         <!-- 교육일정 테이블 -->
