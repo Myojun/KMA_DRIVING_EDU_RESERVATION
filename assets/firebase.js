@@ -26,6 +26,6 @@ export async function activeRecords(f, db, date) {
 export async function initialState(f, db, date) {
  const snapshot=await f.getDocFromServer(f.doc(db,'availableDates',date));
  if (!snapshot.exists() || snapshot.data().bookingState?.version === 1) return null;
- const {seedState}=await import('./core.js?v=20261027-final');
+ const {seedState}=await import('./core.js?v=20261028-17h');
  return seedState(await activeRecords(f,db,date));
 }

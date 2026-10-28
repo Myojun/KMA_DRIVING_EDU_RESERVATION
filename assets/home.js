@@ -1,5 +1,5 @@
-import {$, status, dateOfTimestamp, deadline, explain} from './core.js?v=20261027-final';
-import {firebase} from './firebase.js?v=20261027-final';
+import {$, status, dateOfTimestamp, deadline, explain} from './core.js?v=20261028-17h';
+import {firebase} from './firebase.js?v=20261028-17h';
 let busy = false, loaded = false, lastAttempt = 0;
 async function load() {
  if (busy || Date.now() - lastAttempt < 2000) return;

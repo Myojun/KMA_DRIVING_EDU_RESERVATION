@@ -1,5 +1,5 @@
-import {$, node, status, displayDate, validDate, TIMES, COURSES, bindPhone, readIdentity, phoneVariants, normalizePhone, phoneHash, deadline, explain, userError, release, slotKey} from './core.js?v=20261027-final';
-import {firebase, initialState} from './firebase.js?v=20261027-final';
+import {$, node, status, displayDate, validDate, TIMES, COURSES, bindPhone, readIdentity, phoneVariants, normalizePhone, phoneHash, deadline, explain, userError, release, slotKey} from './core.js?v=20261028-17h';
+import {firebase, initialState} from './firebase.js?v=20261028-17h';
 bindPhone();
 let identity=null, busy=false, cancelling=false, pending=null, trigger=null, searchVersion=0;
 const dialog=$('cancelDialog');

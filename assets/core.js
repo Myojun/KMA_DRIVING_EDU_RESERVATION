@@ -1,5 +1,5 @@
 // Pure helpers, shared by pages and offline verification. No personal data is stored in the browser.
-export const TIMES = ['08시', '10시', '13시', '15시'];
+export const TIMES = ['08시', '10시', '13시', '15시', '17시'];
 export const COURSES = ['기능', '도로기초', '도봉'];
 export const $ = id => document.getElementById(id);
 export function node(tag, text, className) { const e = document.createElement(tag); if (text !== undefined) e.textContent = String(text ?? ''); if (className) e.className = className; return e; }
