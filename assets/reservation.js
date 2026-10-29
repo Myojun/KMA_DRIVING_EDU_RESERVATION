@@ -1,9 +1,12 @@
-import {$, TIMES, COURSES, node, status, todayKey, displayDate, slotKey, capacity, bindPhone, readIdentity, deadline, explain, allocate, userError, phoneHash} from './core.js?v=20261028-17h';
-import {firebase, initialState} from './firebase.js?v=20261028-17h';
+import {markerWindow,hasOpenedEducation,fetchOpenedDates} from './calendar-markers.js?v=20261029-slots';
+import {$, TIMES, COURSES, node, status, todayKey, displayDate, slotKey, capacity, bindPhone, readIdentity, deadline, explain, allocate, userError, phoneHash, hasScheduleCounts} from './core.js?v=20261029-slots';
+import {firebase, initialState} from './firebase.js?v=20261029-slots';
 bindPhone();
 let selectedDate = todayKey(), month = selectedDate.slice(0,7), selectedSlot = null;
 let scheduleError=false, hasDisplay=false, countsKnown=false;
 const dateCache=new Map();
+let markerDays=new Set(),markerStart=null,markerEnd=null,markerChecked=0,markerBusy=false;
+
 // Warm SDK loading independently of the first date selection.
 const warmSDK=firebase();warmSDK.catch(()=>{});
 let schedule = null, counts = {}, ready = false, submitting = false, generation = 0;
@@ -19,7 +22,9 @@ function drawCalendar() {
  for (let d=1;d<=last;d++) {
   const key = `${month}-${String(d).padStart(2,'0')}`; const button = node('button',d); button.type='button';
   button.disabled = key < todayKey() || submitting;
-  button.setAttribute('aria-label',`${year}년 ${m}월 ${d}일`);
+  const opened=key>=todayKey()&&key>=markerStart&&key<=markerEnd&&markerDays.has(key);
+  if(opened)button.classList.add('has-education');
+  button.setAttribute('aria-label',`${year}년 ${m}월 ${d}일${opened?' · 교육 개설':''}`);
   button.setAttribute('aria-pressed',String(selectedDate === key));
   if (key === todayKey()) { button.classList.add('today'); button.setAttribute('aria-current','date'); }
   button.dataset.date=key; button.addEventListener('click',() => selectDate(key)); cal.append(button);
@@ -67,9 +72,9 @@ async function selectDate(key, force=false) {
  let dateVerified=false,legacyVerified=false;
  const remember=()=>{dateCache.delete(key);dateCache.set(key,{schedule,counts:{...counts},countsKnown});if(dateCache.size>40)dateCache.delete(dateCache.keys().next().value);};
  const update=()=>{
-  const legacy=!!schedule&&schedule.bookingState?.version!==1;
+  const legacy=!!schedule&&!hasScheduleCounts(schedule);
   ready=dateVerified&&(!legacy||legacyVerified);scheduleError=false;
-  if(ready){clearTimeout(timer);timer=null;remember();}else if(timer===null){timer=setTimeout(()=>failed(new Error('READ_TIMEOUT'),token),15000);}
+  if(ready){clearTimeout(timer);timer=null;remember();if(key>=markerStart&&key<=markerEnd){if(hasOpenedEducation(schedule))markerDays.add(key);else markerDays.delete(key);drawCalendar();}}else if(timer===null){timer=setTimeout(()=>failed(new Error('READ_TIMEOUT'),token),15000);}
   $('scheduleBody').setAttribute('aria-busy',String(!ready));drawSchedule();
   status('scheduleStatus',ready?(schedule?'일정 확인 완료':'이 날짜에는 개설된 교육이 없습니다.'):'최신 예약 인원 확인 중');
  };
@@ -80,7 +85,7 @@ async function selectDate(key, force=false) {
    if(stopLegacy)return;
    const q=f.query(f.collection(db,'reservations'),f.where('date','==',key),f.where('status','==','예약됨'));
    stopLegacy=f.onSnapshot(q,{includeMetadataChanges:true},records=>{
-    if(token!==generation||!schedule||schedule.bookingState?.version===1)return;
+    if(token!==generation||!schedule||hasScheduleCounts(schedule))return;
     const next={};records.forEach(doc=>{const r=doc.data();if(TIMES.includes(r.time)&&COURSES.includes(r.courseType)){const k=slotKey(r.time,r.courseType);next[k]=(next[k]||0)+1;}});
     legacyVerified=!records.metadata.fromCache&&!records.metadata.hasPendingWrites;
     // Do not replace known counts with an incomplete initial cache result.
@@ -89,14 +94,14 @@ async function selectDate(key, force=false) {
    },error=>failed(error,token));
   };
   // For previously seen legacy dates, start counts alongside the date listener.
-  if(schedule&&schedule.bookingState?.version!==1)startLegacy();
+  if(schedule&&!hasScheduleCounts(schedule))startLegacy();
   stopDate=f.onSnapshot(f.doc(db,'availableDates',key),{includeMetadataChanges:true},snapshot=>{
    if(token!==generation)return;
    dateVerified=!snapshot.metadata.fromCache&&!snapshot.metadata.hasPendingWrites;
    // A missing cached document is not proof that no schedule exists on the server.
    if(snapshot.exists()||dateVerified){schedule=snapshot.exists()?snapshot.data():null;hasDisplay=true;}
    if(!hasDisplay)return;
-   if(!schedule||schedule.bookingState?.version===1){stopLegacy?.();stopLegacy=null;legacyVerified=false;counts=schedule?.bookingState?.counts||{};countsKnown=true;}
+   if(!schedule||hasScheduleCounts(schedule)){stopLegacy?.();stopLegacy=null;legacyVerified=false;counts=schedule?.bookingState?.counts||{};countsKnown=true;}
    else startLegacy();
    update();
   },error=>failed(error,token));
@@ -122,7 +127,7 @@ $('reservationForm').addEventListener('submit',async event => {
   if (!navigator.onLine) throw userError('인터넷 연결을 확인해 주세요.');
   const {f,db}=await deadline(firebase()); const dateRef=f.doc(db,'availableDates',request.date);
   const [seed,hash]=await deadline(Promise.all([initialState(f,db,request.date),phoneHash(request.phone)])); const reservationRef=f.doc(f.collection(db,'reservations'));
-  // The callback has only transaction reads/writes; counters and daily duplicate locks
+  // The callback has only transaction reads/writes; counters and time-specific duplicate locks
   // live in the same date document. Firestore reruns it after concurrent modifications.
   await f.runTransaction(db,async tx => {
    const snapshot=await tx.get(dateRef);
@@ -145,3 +150,15 @@ document.addEventListener('visibilitychange',() => { if (!document.hidden && !su
 selectDate(selectedDate);
 
 window.addEventListener('online',() => { if (!document.hidden && !submitting) selectDate(selectedDate < todayKey() ? todayKey() : selectedDate,true); });
+
+async function refreshMarkers(force=false){
+ const {start,end}=markerWindow();if(markerBusy||(!force&&markerStart===start&&Date.now()-markerChecked<300000))return;
+ markerBusy=true;if(markerStart!==start){markerStart=start;markerEnd=end;markerDays=new Set();drawCalendar();}
+ try{const days=await deadline((async()=>{const {f,db}=await firebase();return fetchOpenedDates(f,db,start,end);})());if(start!==todayKey())return;markerDays=days;markerStart=start;markerEnd=end;markerChecked=Date.now();drawCalendar();$('calendarMarkerStatus').textContent='';}
+ catch(error){$('calendarMarkerStatus').textContent='개설일 표시를 불러오지 못했습니다.';}
+ finally{markerBusy=false;}
+}
+refreshMarkers();
+setInterval(()=>{if(!document.hidden)refreshMarkers();},300000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMarkers();});
+window.addEventListener('online',()=>{if(!document.hidden)refreshMarkers(true);});

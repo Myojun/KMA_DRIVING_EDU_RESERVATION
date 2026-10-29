@@ -1,5 +1,5 @@
-import {$, node, status, displayDate, validDate, TIMES, COURSES, bindPhone, readIdentity, phoneVariants, normalizePhone, phoneHash, deadline, explain, userError, release, slotKey} from './core.js?v=20261028-17h';
-import {firebase, initialState} from './firebase.js?v=20261028-17h';
+import {$, node, status, displayDate, validDate, TIMES, COURSES, bindPhone, readIdentity, phoneVariants, normalizePhone, phoneHash, deadline, explain, userError, release, slotKey, canUserCancel} from './core.js?v=20261029-slots';
+import {firebase, initialState} from './firebase.js?v=20261029-slots';
 bindPhone();
 let identity=null, busy=false, cancelling=false, pending=null, trigger=null, searchVersion=0;
 const dialog=$('cancelDialog');
@@ -17,11 +17,12 @@ function render(records) {
   const details=node('dl');
   for (const [label,value] of [['예약자',r.name],['소속',`${r.grade ?? '-'}학년 ${r.unit ?? '-'}중대`],['연락처',r.phone]]) details.append(node('dt',label),node('dd',value));
   article.append(details);
-  if (active) {
+  if (active && canUserCancel(r.date)) {
    const button=node('button','예약 취소'); button.type='button'; button.setAttribute('aria-label',`${displayDate(r.date)} ${r.time} ${r.courseType} 예약 취소`);
-   button.addEventListener('click',() => { if (busy || cancelling) return; pending=r; trigger=button; $('cancelDescription').textContent=`${displayDate(r.date)} ${r.time} ${r.courseType} 교육 예약을 취소합니다.`; dialog.showModal(); document.body.classList.add('dialog-open'); });
+   button.addEventListener('click',() => { if (busy || cancelling) return; if(!canUserCancel(r.date)){status('searchStatus','지난 날짜의 예약은 취소할 수 없습니다.','error');return;} pending=r; trigger=button; $('cancelDescription').textContent=`${displayDate(r.date)} ${r.time} ${r.courseType} 교육 예약을 취소합니다.`; dialog.showModal(); document.body.classList.add('dialog-open'); });
    article.append(button);
-  }
+  } else if(active){article.append(node('p','지난 예약 · 취소 불가','small'));}
+
   list.append(article);
  }
 }
@@ -51,6 +52,7 @@ $('confirmCancel').addEventListener('click',async () => {
  let message='', kind='success';
  try {
   if (!navigator.onLine) throw userError('인터넷 연결을 확인해 주세요.');
+  if(!canUserCancel(r.date))throw userError('지난 날짜의 예약은 취소할 수 없습니다.');
   if (!validDate(r.date) || !TIMES.includes(r.time) || !COURSES.includes(r.courseType)) throw userError('예약 정보가 올바르지 않습니다. 교관에게 문의해 주세요.');
   const {f,db}=await deadline(firebase()); const ref=f.doc(db,'reservations',r.id), dateRef=f.doc(db,'availableDates',r.date);
   const [seed,hash]=await deadline(Promise.all([initialState(f,db,r.date),phoneHash(person.phone)]));
@@ -58,6 +60,7 @@ $('confirmCancel').addEventListener('click',async () => {
    const reservation=await tx.get(ref);
    if (!reservation.exists()) throw userError('예약이 존재하지 않습니다. 다시 조회해 주세요.');
    const current=reservation.data();
+   if(!canUserCancel(current.date))throw userError('지난 날짜의 예약은 취소할 수 없습니다.');
    if (current.name!==person.name || normalizePhone(current.phone)!==person.phone) throw userError('예약자 정보가 일치하지 않습니다.');
    // Read the persisted status: a second click or another tab never decrements twice.
    if (current.status==='취소됨') return;
